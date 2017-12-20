@@ -12,6 +12,7 @@ program hct
   double precision :: a(3), b(3), c(3), d(3), e(3), g(3), omega
   double precision :: p(3), q(3), u(3)
   integer :: i, j, k, l, nunit
+  double precision, external :: calcS
   !
   call constrDonnees()
   !
@@ -38,7 +39,6 @@ program hct
   open(unit = nunit, file = "coeff.res")
   do l = 1, ntri
      call calcCoordT(coord, n, tri(:, l), coordT)
-     write(6, '(''Triangle '',i3)') l
      call calcBaryc(coordT, M, lambda, dansT)
      call calcFoncT(fonc, n, tri(:, l), foncT)
      call calcGradT(derivx, derivy, n, tri(:, l), gradT)
@@ -49,30 +49,13 @@ program hct
      !
      if(dansT) then
         do i = 1, 3
-           j = mod(i, 3) + 1
-           k = mod(j, 3) + 1
-           coordTi(1, 1) = coordOmega(1)
-           coordTi(1, 2) = coordOmega(2)
-           coordTi(2, 1) = coordT(j, 1)
-           coordTi(2, 2) = coordT(j, 2)
-           coordTi(3, 1) = coordT(k, 1)
-           coordTi(3, 2) = coordT(k, 2)
-           write(6, '(''Triangle '',2i3)') l, i
+           call calcCoordTi(coordT, coordOmega, i, coordTi)
            call calcBaryc(coordTi, M, lambda, dansTi)
            if(dansTi) then
-              S = a(k)*lambda(3)**3 + &
-                   c(k)*3*lambda(2)*lambda(3)*lambda(3) + &
-                   b(j)*3*lambda(2)*lambda(2)*lambda(3) + &
-                   a(j)*lambda(2)**3 + &
-                   d(k)*3*lambda(1)*lambda(3)*lambda(3) + &
-                   g(i)*6*lambda(1)*lambda(2)*lambda(3) + &
-                   d(j)*3*lambda(1)*lambda(2)*lambda(2) + &
-                   e(k)*3*lambda(1)*lambda(1)*lambda(3) + &
-                   e(j)*3*lambda(1)*lambda(1)*lambda(2) + &
-                   omega*lambda(1)**3
+              S = calcS(a, b, c, d, e, g, omega, lambda, i)
+              write(6, '(''S ='',f14.7)') S
            end if
         end do
-        write(6, '(''S = '',f15.7)') S
      end if
      write(nunit, '(''Triangle '',i3)') l
      do k = 1, 3
@@ -102,7 +85,6 @@ subroutine calcBaryc(A, M, lambda, dansT)
        (A(1, 1) - A(3, 1)) * (M(2) - A(3, 2))) / det
   lambda(3) = 1 - lambda(1) - lambda(2)
   !
-  write(6, '(3f14.7)') (lambda(i), i = 1, 3)
   dansT = .true.
   do i = 1, 3
      if(lambda(i) < 0.0d0 .or. lambda(i) > 1.0d0) then
@@ -177,6 +159,24 @@ subroutine calcCoordT(coord, n, trii, coordT)
 end subroutine calcCoordT
 !
 !
+subroutine calcCoordTi(coordT, coordOmega, i, coordTi)
+  implicit none
+  integer, intent(in) :: i
+  double precision, intent(in) :: coordT(3, 2), coordOmega(2)
+  double precision, intent(out) :: coordTi(3, 2)
+  integer :: j, k
+  !
+  j = mod(i, 3) + 1
+  k = mod(j, 3) + 1
+  coordTi(1, 1) = coordOmega(1)
+  coordTi(1, 2) = coordOmega(2)
+  coordTi(2, 1) = coordT(j, 1)
+  coordTi(2, 2) = coordT(j, 2)
+  coordTi(3, 1) = coordT(k, 1)
+  coordTi(3, 2) = coordT(k, 2)
+end subroutine calcCoordTi
+!
+!
 subroutine calcGradT(derivx, derivy, n, trii, gradT)
   implicit none
   integer, intent(in) :: n
@@ -239,3 +239,20 @@ subroutine calcu(A, Omega, u)
           (AjAk(1) * AjAk(1) + AjAk(2) * AjAk(2))
   end do
 end subroutine calcu
+!
+!
+double precision function calcS(a, b, c, d, e, g, omega, lambda, i)
+  double precision :: a(3), b(3), c(3), d(3), e(3), g(3), omega
+  double precision :: lambda(3)
+  integer :: i, j, k
+  !
+  j = mod(i, 3) + 1
+  k = mod(j, 3) + 1
+  S = a(k)*lambda(3)**3 + c(k)*3*lambda(2)*lambda(3)*lambda(3) + &
+       b(j)*3*lambda(2)*lambda(2)*lambda(3) + a(j)*lambda(2)**3 + &
+       d(k)*3*lambda(1)*lambda(3)*lambda(3) + &
+       g(i)*6*lambda(1)*lambda(2)*lambda(3) + &
+       d(j)*3*lambda(1)*lambda(2)*lambda(2) + &
+       e(k)*3*lambda(1)*lambda(1)*lambda(3) + &
+       e(j)*3*lambda(1)*lambda(1)*lambda(2) + omega*lambda(1)**3
+end function calcS
