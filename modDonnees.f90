@@ -40,11 +40,11 @@ contains
     end do
     !
     do i = 1, n
-       write(nunit, *) i, coord(i, 1), coord(i, 2), fonc(i), &
-            derivx(i), derivy(i)
+       write(nunit, '(i3, 5e15.7)') i, coord(i, 1), coord(i, 2), &
+            fonc(i), derivx(i), derivy(i)
     end do
     close(nunit)
- 
+
   end subroutine ecrFiDonnees
   !
   !
@@ -61,7 +61,9 @@ contains
     open(unit = nunit, file = "hct.pts")
     read(nunit, *) n
     allocate(coord(n, 2))
-    read(nunit, *) ((coord(i, j), j = 1, 2), i = 1, n)
+    do i = 1, n
+       read(nunit, *) coord(i, 1), coord(i, 1), coord(i,2)
+    end do
     close(nunit)
   end subroutine lecFiPoints
   !
@@ -74,6 +76,8 @@ contains
     open(unit = nunit, file = "hct.tri")
     read(nunit, *) ntri
     allocate(tri(3, ntri))
-    read(nunit, *) ((tri(i, j), i = 1, 3), j = 1, ntri)
+    do j = 1, ntri
+       read(nunit, *) tri(1, j), tri(1, j), tri(2, j), tri(3, j)
+    end do
   end subroutine lecFiTri
 end module donnees
