@@ -1,71 +1,34 @@
 program hct
   use donnees
   implicit none
-  integer :: ntestx, ntesty
-  logical :: dansT, dansTi
-  double precision :: alpha, beta, gamma, delta, pasx, pasy, S
-  double precision :: M(2)
-  double precision, allocatable :: testPts(:,:)
-  double precision :: coordT(3, 2), coordTi(3, 2), coordOmega(3)
-  double precision :: lambda(3)
-  double precision :: foncT(3), gradT(3, 2)
-  double precision :: a(3), b(3), c(3), d(3), e(3), g(3), omega
-  double precision :: p(3), q(3), u(3)
-  integer :: i, j, k, l, nunit
-  double precision, external :: calcS
+  integer :: ntest, ntestx, ntesty
+  double precision :: alpha, beta, gamma, delta, pasx, pasy
+  double precision, allocatable :: testPts(:,:), S(:)
+  integer :: i, j
   !
   call constrDonnees()
   !
-  ntestx = 30
-  ntesty = 30
+  ntestx = 31
+  ntesty = 31
   alpha = 0.0d0
   beta = 3.0d0
   gamma = 0.0d0
-  delta = 4.0d0
+  delta = 3.0d0
   pasx = (beta - alpha) / (ntestx - 1)
   pasy = (delta - gamma) / (ntesty - 1)
-  allocate(testPts(ntestx * ntesty, 2))
-  do i = 0, ntestx - 1
-     do j = 0, ntesty - 1
-        testPts(i*ntesty + 1 + j, 1) = alpha + i*pasx
-        testPts(i*ntesty + 1 + j, 2) = gamma + j*pasy
+  ntest = ntestx * ntesty
+  allocate(S(ntest), testPts(ntest, 2))
+  do i = 0, ntesty - 1
+     do j = 0, ntestx - 1
+        testPts(i*ntestx + 1 + j, 1) = alpha + j*pasx
+        testPts(i*ntestx + 1 + j, 2) = gamma + i*pasy
      end do
   end do
   !
   !
-  nunit = 7
-  M(1) = 2.5
-  M(2) = 0.8
-  open(unit = nunit, file = "coeff.res")
-  do l = 1, ntri
-     call calcCoordT(coord, n, tri(:, l), coordT)
-     call calcBaryc(coordT, M, lambda, dansT)
-     call calcFoncT(fonc, n, tri(:, l), foncT)
-     call calcGradT(derivx, derivy, n, tri(:, l), gradT)
-     call calcpq(coordT, gradT, p, q)
-     call calcOmega(coordT, coordOmega)
-     call calcu(coordT, coordOmega, u)
-     call calcCoeff(foncT, p, q, u, a, b, c, d, e, g, omega)
-     !
-     if(dansT) then
-        do i = 1, 3
-           call calcCoordTi(coordT, coordOmega, i, coordTi)
-           call calcBaryc(coordTi, M, lambda, dansTi)
-           if(dansTi) then
-              S = calcS(a, b, c, d, e, g, omega, lambda, i)
-              write(6, '(''S ='',f14.7)') S
-           end if
-        end do
-     end if
-     write(nunit, '(''Triangle '',i3)') l
-     do k = 1, 3
-        write(nunit, '(7f15.7)') a(k), b(k), c(k), d(k), e(k), &
-             g(k), omega
-     end do
-  end do
-  close(nunit)
-  deallocate(testPts)
-  call free()
+  call interp(testPts, S, ntest)
+  call freeDonnees()
+  deallocate(S, testPts)
 end program hct
 !
 !
@@ -75,6 +38,7 @@ subroutine calcBaryc(A, M, lambda, dansT)
   double precision, intent(in) :: A(3, 2), M(2)
   double precision, intent(out) :: lambda(3)
   double precision :: det
+  double precision, parameter :: tol = 1.0d-15
   integer :: i
   !
   det = (A(2, 2) - A(3, 2)) * (A(1, 1) - A(3, 1)) + &
@@ -83,10 +47,13 @@ subroutine calcBaryc(A, M, lambda, dansT)
        (A(3, 1) - A(2, 1)) * (M(2) - A(3, 2))) / det
   lambda(2) = ((A(3, 2) - A(1, 2)) * (M(1) - A(3, 1)) + &
        (A(1, 1) - A(3, 1)) * (M(2) - A(3, 2))) / det
-  lambda(3) = 1 - lambda(1) - lambda(2)
+  lambda(3) = 1.0d0 - lambda(1) - lambda(2)
   !
   dansT = .true.
   do i = 1, 3
+     if(abs(lambda(i)) < tol) then
+        lambda(i) = 0.0d0
+     end if
      if(lambda(i) < 0.0d0 .or. lambda(i) > 1.0d0) then
         dansT = .false.
      end if
@@ -256,3 +223,102 @@ double precision function calcS(a, b, c, d, e, g, omega, lambda, i)
        e(k)*3*lambda(1)*lambda(1)*lambda(3) + &
        e(j)*3*lambda(1)*lambda(1)*lambda(2) + omega*lambda(1)**3
 end function calcS
+!
+!
+subroutine interp(testPts, S, ntest)
+  use donnees
+  implicit none
+  integer, intent(in) :: ntest
+  double precision, intent(in) :: testPts(ntest, 2)
+  double precision, intent(out) :: S(ntest)
+  double precision :: M(2)
+  double precision :: coordOmega(3), coordT(3, 2), coordTi(3, 2)
+  double precision :: lambda(3)
+  double precision :: foncT(3), gradT(3, 2)
+  double precision :: a(3), b(3), c(3), d(3), e(3), g(3), omega
+  double precision :: p(3), q(3), u(3)
+  logical :: dansT, dansTi
+  integer :: i, j, k, l, niter, nunit
+  double precision, external :: calcS
+  !
+  nunit = 7
+  open(unit = nunit, file = "S.res")
+  M(1) = testPts(1, 1)
+  M(2) = testPts(1, 2)
+  !
+  l = 0
+  dansT = .false.
+  do while (.not. dansT .and. l /= ntri)
+     l = l + 1
+     call calcCoordT(coord, n, tri(:, l), coordT)
+     call calcBaryc(coordT, M, lambda, dansT)
+  end do
+  !
+  if(dansT) then
+     call calcFoncT(fonc, n, tri(:, l), foncT)
+     call calcGradT(derivx, derivy, n, tri(:, l), gradT)
+     call calcpq(coordT, gradT, p, q)
+     call calcOmega(coordT, coordOmega)
+     call calcu(coordT, coordOmega, u)
+     call calcCoeff(foncT, p, q, u, a, b, c, d, e, g, omega)
+     !
+     i = 0
+     dansTi = .false.
+     do while (.not. dansTi)
+        i = mod(i, 3) + 1
+        call calcCoordTi(coordT, coordOmega, i, coordTi)
+        call calcBaryc(coordTi, M, lambda, dansTi)
+     end do
+     !
+     S(1) = calcS(a, b, c, d, e, g, omega, lambda, i)
+     write(nunit, '(3f15.7)') S(1)
+     !
+  else 
+     write(6, '(''Le point ('',f15.7,'','', f15.7, '')'')') &
+          M(1), M(2)
+     write(6, *)'n est pas dans la triangulation'
+  end if
+  !
+  if (ntest > 1) then
+     do k = 2, ntest
+        M(1) = testPts(k, 1)
+        M(2) = testPts(k, 2)
+        !
+        l = mod(l + ntri - 2, ntri) + 1
+        niter = 0
+        dansT = .false.
+        do while (.not. dansT .and. niter /= ntri)
+           l = mod(l, ntri) + 1
+           call calcCoordT(coord, n, tri(:, l), coordT)
+           call calcBaryc(coordT, M, lambda, dansT)
+           niter = niter + 1
+        end do
+        !
+        if(dansT) then
+           if(niter /= 1) then
+              call calcFoncT(fonc, n, tri(:, l), foncT)
+              call calcGradT(derivx, derivy, n, tri(:, l), gradT)
+              call calcpq(coordT, gradT, p, q)
+              call calcOmega(coordT, coordOmega)
+              call calcu(coordT, coordOmega, u)
+              call calcCoeff(foncT, p, q, u, a, b, c, d, e, g, omega)
+           end if
+           dansTi = .false.
+           i = mod(i + 1, 3) + 1
+           do while (.not. dansTi)
+              i = mod(i, 3) + 1
+              call calcCoordTi(coordT, coordOmega, i, coordTi)
+              call calcBaryc(coordTi, M, lambda, dansTi)
+           end do
+           S(k) = calcS(a, b, c, d, e, g, omega, lambda, i)
+           write(nunit, '(f15.7)') S(k)
+           !
+        else 
+           write(6, '(''Le point ('',f15.7,'','', f15.7, '')'')') &
+                M(1), M(2)
+           write(6, *)'n est pas dans la triangulation'
+        end if
+     end do
+  end if
+  close(nunit)
+end subroutine interp

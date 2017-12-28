@@ -1,6 +1,6 @@
 module donnees
   implicit none
-  public :: constrDonnees, free
+  public :: constrDonnees, freeDonnees
   integer :: n, ntri
   double precision, allocatable :: coord(:, :)
   double precision, allocatable :: fonc(:), derivx(:), derivy(:)
@@ -48,9 +48,9 @@ contains
   end subroutine ecrFiDonnees
   !
   !
-  subroutine free()
+  subroutine freeDonnees()
     deallocate(coord, fonc, derivx, derivy)
-  end subroutine free
+  end subroutine freeDonnees
   !
   !
   subroutine lecFiPoints()
