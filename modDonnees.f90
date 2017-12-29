@@ -1,10 +1,11 @@
 module donnees
   implicit none
-  public :: constrDonnees, freeDonnees
   integer :: n, ntri
   double precision, allocatable :: coord(:, :)
   double precision, allocatable :: fonc(:), derivx(:), derivy(:)
   integer, allocatable :: tri(:,:)
+  public :: constrDonnees, ecrFiDonnees, freeDonnees, lecFiGrille
+  private :: calcfDeriv, lecFiPoints, lecFiTri
   !
 contains
   subroutine calcfDeriv()
@@ -25,7 +26,6 @@ contains
     call lecFiPoints()
     call lecFiTri()
     call calcfDeriv()
-    call ecrFiDonnees()
   end subroutine constrDonnees
   !
   !
@@ -51,6 +51,20 @@ contains
   subroutine freeDonnees()
     deallocate(coord, fonc, derivx, derivy)
   end subroutine freeDonnees
+  !
+  !
+  subroutine lecFiGrille(ntestx, ntesty, alpha, beta, gamma, delta)
+    implicit none
+    integer, intent (out):: ntestx, ntesty
+    double precision, intent(out) :: alpha, beta, gamma, delta
+    integer :: nunit
+    !
+    nunit = 7
+    open(unit = nunit, file = "grille.don")
+    read(nunit, *) ntestx, ntesty
+    read(nunit, *) alpha, beta, gamma, delta
+    close(nunit)
+  end subroutine lecFiGrille
   !
   !
   subroutine lecFiPoints()
