@@ -4,7 +4,7 @@ module donnees
   double precision, allocatable :: coord(:, :)
   double precision, allocatable :: fonc(:), derivx(:), derivy(:)
   integer, allocatable :: tri(:,:)
-  public :: constrDonnees, ecrFiDonnees, freeDonnees, lecFiGrille
+  public :: constrDonnees, ecrFiDonnees, freeDonnees
   private :: calcfDeriv, lecFiPoints, lecFiTri
   !
 contains
@@ -22,19 +22,23 @@ contains
   end subroutine calcfDeriv
   !
   !
-  subroutine constrDonnees()
-    call lecFiPoints()
-    call lecFiTri()
+  subroutine constrDonnees(fiPts, fiTri)
+    implicit none
+    character(len = *), intent(in) :: fiPts, fiTri
+    !
+    call lecFiPoints(fiPts)
+    call lecFiTri(fiTri)
     call calcfDeriv()
   end subroutine constrDonnees
   !
   !
-  subroutine ecrFiDonnees()
+  subroutine ecrFiDonnees(fiRes)
     implicit none
+    character(len = *), intent(in) :: fiRes
     integer :: i, nunit
     !
     nunit = 7
-    open(unit = nunit, file = "hct.res")
+    open(unit = nunit, file = fiRes)
     do i = 1, ntri
        write(nunit, *) i, tri(1, i), tri(2, i), tri(3, i)
     end do
@@ -53,26 +57,13 @@ contains
   end subroutine freeDonnees
   !
   !
-  subroutine lecFiGrille(ntestx, ntesty, alpha, beta, gamma, delta)
+  subroutine lecFiPoints(fiPts)
     implicit none
-    integer, intent (out):: ntestx, ntesty
-    double precision, intent(out) :: alpha, beta, gamma, delta
-    integer :: nunit
-    !
-    nunit = 7
-    open(unit = nunit, file = "grille.don")
-    read(nunit, *) ntestx, ntesty
-    read(nunit, *) alpha, beta, gamma, delta
-    close(nunit)
-  end subroutine lecFiGrille
-  !
-  !
-  subroutine lecFiPoints()
-    implicit none
+    character(len = *), intent(in) :: fiPts
     integer :: i, j, nunit
     !
     nunit = 7
-    open(unit = nunit, file = "hct.pts")
+    open(unit = nunit, file = fiPts)
     read(nunit, *) n
     allocate(coord(n, 2))
     do i = 1, n
@@ -82,12 +73,13 @@ contains
   end subroutine lecFiPoints
   !
   !
-  subroutine lecFiTri()
+  subroutine lecFiTri(fiTri)
     implicit none
+    character(len = *), intent(in) :: fiTri
     integer :: i, j, nunit
     !
     nunit = 7
-    open(unit = nunit, file = "hct.tri")
+    open(unit = nunit, file = fiTri)
     read(nunit, *) ntri
     allocate(tri(3, ntri))
     do j = 1, ntri
