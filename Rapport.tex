@@ -1,0 +1,58 @@
+\documentclass[12 pt]{article}
+\usepackage[francais]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{float}
+\usepackage{graphicx}
+\usepackage{caption,subcaption}
+\usepackage{listings}
+\lstset{
+  language=C++, 
+  inputencoding=ansinew,
+  basicstyle=\footnotesize,
+  breaklines=true,
+  keywordstyle=\bfseries,
+  identifierstyle=\color{black},
+  showstringspaces=false,
+  numbers=left,
+  numberstyle={\tiny \color{black}},
+  numbersep=9pt, 
+  frame=single   
+}
+\usepackage{booktabs}
+\usepackage[margin=1in]{geometry}
+\usepackage{array}
+\usepackage{color} 
+\usepackage{amssymb}
+\usepackage{amsmath}
+\definecolor{mygreen}{RGB}{28,172,0} 
+\definecolor{mylilas}{RGB}{170,55,241}
+\title{Interpolation par l'élément fini HCT réduit
+    pour la représentation d'une surface de classe $C^1$}
+\date{Janvier 2018}
+\author{Carlos Sosa Marrero\\
+  Damien Thomas}
+\begin{document}
+\pagenumbering{gobble}
+\maketitle
+\newpage
+\pagenumbering{arabic}
+\section{Structure du programme}
+\subsection{Module HCT}
+Le module HCT (\texttt{modHct.f90}) contient les sous-routines et fonction suivantes :
+\begin{itemize}
+	\item \texttt{calcBaryc(A, M, lambda, dansT)} : elle calcule les coordonnées barycentriques \texttt{lambda} du point \texttt{M} par rapport au triangle T, de sommets \texttt{A}. En plus, elle détermine si \texttt{M} appartient à T (\texttt{dansT = true}), ce qui arrive lorsque $ 0 \leq \lambda_i^T \leq 1$ pour $i = 1, 2, 3$ 
+	\item \texttt{calcCoeff(foncT, p, q, u, a, b, c, d, e, g, omega)} : elle calcule les B-coefficients du triangle T en utilisant les formules fournies dans l'énoncé.
+	\item \texttt{calcFoncT(fonc, n, trii, foncT)} : elle extrait dans \texttt{foncT} les valeurs de $f$ en les sommets du triangle T (regroupés dans \texttt{tri}).
+	\item \texttt{calcCoordT(coord, n, trii, coordT)} : elle extrait dans \texttt{coordT} les coordonnées des sommets du triangle T (regroupés dans \texttt{trii)}.
+	\item \texttt{calcCoordTi(coordT, coordOmega, i, coordTi)} : elle calcule les coordonnées des sommets du sous-triangle $T_i$, \texttt{coordTi}, à partir des coordonnées des sommets du triangle $T$, \texttt{coordT}, et de son centre de gravité, \texttt{coordOmega}.
+	\item \texttt{calcGradT(derivx, derivy, n, trii, gradT)} : elle extrait dans \texttt{gradT} les valeurs du gradient de $f$ en les sommets du triangle T (regroupés dans \texttt{tri}).
+	\item \texttt{calcOmega(A, Omega)} : elle calcule les coordonnés du centre de gravité, \texttt{Omega}, du triangle de sommets \texttt{A}.
+	\item \texttt{calcpq(A, gradA, p, q)} : elle calcule les quantités \texttt{p} et \texttt{q}, nécessaires pour l'obtention des B-coefficients.
+	\item \texttt{calcu(A, Omega, u)} : elle calcule la quantité \texttt{u}, nécessaire pour l'obtention des B-coefficients.
+	\item \texttt{double precision calcS(a, b, c, d, e, g, omega, lambda, i)} : elle renvoie la valeur de $S_i$, calculée en utilisant la formule fournie dans l'énoncé.
+	\item \texttt{interp(testPts, S, ntest)} : elle évalue l'interpolant, \texttt{S}, en \texttt{ntest} points de test, \texttt{testPts}.
+	
+	
+\end{itemize}
+\section{Résultats}
+\end{document}
