@@ -38,24 +38,11 @@
 \newpage
 \pagenumbering{arabic}
 \section{Structure du programme}
-On a développé les modules Fortran90 \texttt{modHct.f90}, \texttt{modTestFunctions.f90}, \texttt{modDonnees.f90} et \texttt{modTestPts.f90}, le programme de test \texttt{test\_hct.f90} et le script Matlab \texttt{test\_hct.m}.
-\subsection{Module HCT}
-Le module HCT (\texttt{modHct.f90}) contient les sous-routines et fonction suivantes :
-\begin{itemize}
-	\item \texttt{calcBaryc(A, M, lambda, dansT)} : elle calcule les coordonnées barycentriques \texttt{lambda} du point \texttt{M} par rapport au triangle T, de sommets \texttt{A}. En plus, elle détermine si \texttt{M} appartient à T (\texttt{dansT = true}), ce qui arrive lorsque $ 0 \leq \lambda_i^T \leq 1$ pour $i = 1, 2, 3$ 
-	\item \texttt{calcCoeff(foncT, p, q, u, a, b, c, d, e, g, omega)} : elle calcule les B-coefficients du triangle T en utilisant les formules fournies dans l'énoncé.
-	\item \texttt{calcFoncT(fonc, n, trii, foncT)} : elle extrait dans \texttt{foncT} les valeurs de $f$ aux sommets du triangle T (regroupés dans \texttt{tri}).
-	\item \texttt{calcCoordT(coord, n, trii, coordT)} : elle extrait dans \texttt{coordT} les coordonnées des sommets du triangle T (regroupés dans \texttt{trii)}.
-	\item \texttt{calcCoordTi(coordT, coordOmega, i, coordTi)} : elle calcule les coordonnées des sommets du sous-triangle $T_i$, \texttt{coordTi}, à partir des coordonnées des sommets du triangle $T$, \texttt{coordT}, et de son centre de gravité, \texttt{coordOmega}.
-	\item \texttt{calcGradT(derivx, derivy, n, trii, gradT)} : elle extrait dans \texttt{gradT} les valeurs du gradient de $f$ aux sommets du triangle T (regroupés dans \texttt{tri}).
-	\item \texttt{calcOmega(A, Omega)} : elle calcule les coordonnés du centre de gravité, \texttt{Omega}, du triangle de sommets \texttt{A}.
-	\item \texttt{calcpq(A, gradA, p, q)} : elle calcule les quantités \texttt{p} et \texttt{q}, nécessaires pour l'obtention des B-coefficients.
-	\item \texttt{calcu(A, Omega, u)} : elle calcule la quantité \texttt{u}, nécessaire pour l'obtention des B-coefficients.
-	\item \texttt{double precision calcS(a, b, c, d, e, g, omega, lambda, i)} : elle renvoie la valeur de $S_i$, calculée en utilisant la formule fournie dans l'énoncé.
-	\item \texttt{interp(testPts, S, ntest)} : elle est la seule sous-routine publique de ce module. Elle évalue l'interpolant, \texttt{S}, en \texttt{ntest} points de test, \texttt{testPts}. Pour le premier point de test, elle boucle sur tous les éléments de la triangulation en appelant les sous-routines \texttt{calcCoordT} et \texttt{calcBaryc} jusqu'à trouver à quel triangle appartient le point en question. Une fois il a été identifié, elle extrait les valeurs de $f$ (\texttt{calcFoncT}) et son gradient (\texttt{calcGradT}) en ces sommets et calcule les quantités $p$ et $q$, le coordonnés du centre de gravité, $u$ et les B-coefficients en faisant appel, respectivement, aux sous-routines \texttt{calcpq}, \texttt{calcOmega}, \texttt{calcu} et \texttt{calcCoeff}. Finalement, elle détermine à quel sous-triangle appartient le point de test (\texttt{calcCoordTi} et \texttt{calcBaryc}) et calcule la valeur de $S$ en appelant la fonction \texttt{calcS}.
-	
-	Ensuite, cette sous-routine évalue l'interpolant sur le reste des points de test. Comme pour le cas du premier point, elle boucle sur les éléments de la triangulation afin de déterminer quel triangle contient le point en question. Comme il est probable que deux points de test contigus appartiennent au même triangle, la boucle commence par le triangle contenant le point précédent. Si elle s'arrête au bout d'une itération, cela veut dire que les deux points appartiennent, en effet, au même triangle et, donc, il n'a pas besoin de recalculer les B-coefficient ni toutes les quantités associées
-\end{itemize}
+On a développé les modules Fortran90 \texttt{modHct.f90}, \texttt{modTestFunctions.f90}, \texttt{modDonnees.f90} et \texttt{modTestPts.f90}, le programme de test \texttt{test\_hct.f90} et le script Matlab \texttt{test\_hct.m}. Les fichiers Fortran sont compilés à l'aide de la commande
+
+\texttt{>> gfortran modTestFunctions.f90 modTestPoints.f90 modDonnees.f90 modHct.f90}
+
+\texttt{test\_hct.f90}
 \subsection{Module de fonctions de test}
 Le module de fonctions de test (\texttt{modTestFunctions.f90}) contient les trois fonctions suivantes :
 \begin{itemize}
@@ -77,34 +64,77 @@ Le module de données (\texttt{modDonnees.f90}) contient les variables :
 \end{itemize}
 Il contient les sous-routines suivantes : 
 \begin{itemize}
-	\item \texttt{calcfDeriv()} : elle alloue et remplit les tableaux \texttt{fonc}, \texttt{derivx} et \texttt{derivy}, en utilisant les fonctions du module de fonctions de test.
-	\item  \texttt{constrDonnees(fiPts, fiTri)} : elle fait les appels aux sous-routines \texttt{lecFiPoints}, \texttt{lecFiTri} et \texttt{calcfDeriv}, nécessaires pour construire les données à partir des fichiers \texttt{fiPts} et \texttt{fiTri}.
-	\item \texttt{ecriFiDonnees(fiRes)} : elle écrit les données dans le fichier \texttt{fiRes} de la façon indiquée dans l'énoncé.
-	\item \texttt{freeDonnees()} : elle libère la mémoire allouée pour les tableaux de données.
 	\item \texttt{lecFiPoints(fiPts)} : elle lit le fichier \texttt{fiPts} pour allouer et remplir le tableau \texttt{coord}.
 	\item \texttt{lecFiTri(fiTri)} : elle lit le fichier \texttt{fiTri} pour allouer et remplir le tableau \texttt{tri}.
+	\item \texttt{calcfDeriv()} : elle alloue et remplit les tableaux \texttt{fonc}, \texttt{derivx} et \texttt{derivy}, en utilisant les fonctions du module de fonctions de test.
+	\item  \texttt{constrDonnees(fiPts, fiTri)} : elle réalise les appels aux sous-routines \texttt{lecFiPoints}, \texttt{lecFiTri} et \texttt{calcfDeriv}, nécessaires pour construire les données à partir des fichiers \texttt{fiPts} et \texttt{fiTri}.
+	\item \texttt{ecriFiDonnees(fiRes)} : elle écrit les données dans le fichier \texttt{fiRes} de la façon indiquée dans l'énoncé.
+	\item \texttt{freeDonnees()} : elle libère la mémoire allouée pour les tableaux de données.
 \end{itemize}
 Les seules sous-routines publiques de ce module sont \texttt{constrDonnees}, \texttt{ecrFiDonnees} et \texttt{freeDonnees}.
 \subsection{Module de points de test}
 Le module de données (\texttt{modDonnees.f90}) contient les variables :
 \begin{itemize}
 	\item \texttt{ntest} : le nombre de points de test
-	\item \texttt{err} : le tableau des erreurs commises pour chaque point de test
-	\item \texttt{S} : le tableau des valeurs de $S$ aux points de test
+	\item \texttt{err} : le tableau de l'erreur commise pour chaque point de test
+	\item \texttt{S} : le tableau de la valeur de $S$ aux points de test
 	\item \texttt{testPts} : le tableau des coordonnées des points de test
 \end{itemize}
 Il contient les sous-routines suivantes :
 \begin{itemize} 
+	\item \texttt{lecFiTestPts(fiTestPts)} : elle lit le fichier \texttt{fiTestPts}, contenant les coordonnées de \texttt{ntest} points de test, et alloue les tableaux \texttt{err}, \texttt{S} et \texttt{testPts}.
+	\item \texttt{lecFiGrille(fiGrille, ntestx, ntesty, alpha, beta, gamma, delta)} : elle lit le fichier \texttt{fiGrille}, contenant les limites et les nombres de points de test en $x$ et en $y$ d'une grille rectangulaire.
 	\item \texttt{constrGrille(fiGrille)} : elle construit une grille de points de test à partir des données du fichier \texttt{fiGrille}.
 	\item \texttt{freeTestPts()} : elle libère la mémoire allouée pour \texttt{err}, \texttt{S} et \texttt{testPts}.
-	\item \texttt{lecFiGrille(fiGrille, ntestx, ntesty, alpha, beta, gamma, delta)} : elle lit le fichier \texttt{fiGrille}, contenant les limites et les nombres de points de test en $x$ et en $y$ d'une grille rectangulaire.
-	\item \texttt{lecFiTestPts(fiTestPts)} : elle lit le fichier \texttt{fiTestPts}, contenant les coordonnées de \texttt{ntest} points de test, et alloue les tableaux \texttt{err}, \texttt{S} et \texttt{testPts}.
 \end{itemize}
 Toutes les sous-routines, à exception de \texttt{lecFiGrille}, sont publiques.
+\subsection{Module HCT}
+Le module HCT (\texttt{modHct.f90}) contient les sous-routines et fonction suivantes :
+\begin{itemize}
+	\item \texttt{calcCoordT(coord, n, trii, coordT)} : elle extrait dans \texttt{coordT} les coordonnées des sommets du triangle T (regroupés dans \texttt{trii)}.
+	\item \texttt{calcBaryc(A, M, lambda, dansT)} : elle calcule les coordonnées barycentriques \texttt{lambda} du point \texttt{M} par rapport au triangle T, de sommets \texttt{A}. En plus, elle détermine si \texttt{M} appartient à T (\texttt{dansT = true}), ce qui arrive lorsque $ 0 \leq \lambda_i^T \leq 1$ pour $i = 1, 2, 3$.
+	\item \texttt{calcFoncT(fonc, n, trii, foncT)} : elle extrait dans \texttt{foncT} les valeurs de $f$ aux sommets du triangle T (regroupés dans \texttt{trii}).
+	\item \texttt{calcGradT(derivx, derivy, n, trii, gradT)} : elle extrait dans \texttt{gradT} les valeurs du gradient de $f$ aux sommets du triangle T (regroupés dans \texttt{trii}).
+	\item \texttt{calcpq(A, gradA, p, q)} : elle calcule les quantités \texttt{p} et \texttt{q}, nécessaires pour l'obtention des B-coefficients.
+	\item \texttt{calcOmega(A, Omega)} : elle calcule les coordonnés du centre de gravité, \texttt{Omega}, du triangle de sommets \texttt{A}.
+	\item \texttt{calcu(A, Omega, u)} : elle calcule la quantité \texttt{u}, nécessaire pour l'obtention des B-coefficients.
+	\item \texttt{calcCoeff(foncT, p, q, u, a, b, c, d, e, g, omega)} : elle calcule les B-coefficients du triangle T en utilisant les formules fournies dans l'énoncé.
+	\item \texttt{calcCoordTi(coordT, coordOmega, i, coordTi)} : elle calcule les coordonnées des sommets du sous-triangle $T_i$, \texttt{coordTi}, à partir des coordonnées des sommets du triangle $T$, \texttt{coordT}, et de son centre de gravité, \texttt{coordOmega}.
+	\item \texttt{double precision calcS(a, b, c, d, e, g, omega, lambda, i)} : elle renvoie la valeur de $S_i$, calculée en utilisant la formule fournie dans l'énoncé.
+	\item \texttt{interp(testPts, S, ntest)} : elle est la seule sous-routine publique de ce module. Elle évalue l'interpolant, \texttt{S}, en \texttt{ntest} points de test, \texttt{testPts}. Pour le premier point de test, elle boucle sur tous les éléments de la triangulation en appelant les sous-routines \texttt{calcCoordT} et \texttt{calcBaryc} jusqu'à trouver à quel triangle appartient le point en question. Une fois il a été identifié, elle extrait les valeurs de $f$ (\texttt{calcFoncT}) et son gradient (\texttt{calcGradT}) en ces sommets et calcule les quantités $p$ et $q$, le coordonnés du centre de gravité, $u$ et les B-coefficients en faisant appel, respectivement, aux sous-routines \texttt{calcpq}, \texttt{calcOmega}, \texttt{calcu} et \texttt{calcCoeff}. Finalement, elle détermine à quel sous-triangle appartient le point de test (\texttt{calcCoordTi} et \texttt{calcBaryc}) et calcule la valeur de $S$ en appelant la fonction \texttt{calcS}.
+	
+	Ensuite, cette sous-routine évalue l'interpolant sur le reste des points de test. Comme pour le cas du premier point, elle boucle sur les éléments de la triangulation afin de déterminer quel triangle contient le point en question. Comme il est probable que deux points de test contigus appartiennent au même triangle, la boucle commence par le triangle contenant le point précédent. Si elle s'arrête au bout d'une itération, cela veut dire que les deux points appartiennent, en effet, au même triangle et, donc, il n'a pas besoin de recalculer les B-coefficient ni toutes les quantités associées
+\end{itemize}
 \subsection{Programme de test}
-Un programme de test (\texttt{test\_hct.f90}) a été développé pour vérifier le correct fonctionnement des modules pour les fichiers de points \texttt{hct.pts} et de triangulation, obtenu avec le script Matlab, \texttt{hct.tri}. On a d'abord évalué l'interpolant aux points spécifiés dans l'énoncé (\texttt{testPoints.don}). Ensuite, on a calculé la valeur de $S$ sur une grille des dimension dans \texttt{grille.don}.
+Un programme de test (\texttt{test\_hct.f90}) a été développé pour vérifier le correct fonctionnement des modules pour les fichiers de points \texttt{hct.pts} et de triangulation, obtenu avec le script Matlab, \texttt{hct.tri}. On a d'abord évalué l'interpolant aux points spécifiés dans l'énoncé (\texttt{testPoints.don}). Ensuite, on a calculé la valeur de $S$ sur une grille des dimensions dans \texttt{grille.don}.
 
-On a constitué les fichiers de résultats \texttt{hct.res}, décrit dans l'énoncé, et \texttt{S.res}, contenant les valeurs de $S$ et l'erreur sur la grille afin de pouvoir les tracer sur Matlab.
+On a constitué les fichiers de résultats \texttt{hct.res}, décrit dans l'énoncé, et \texttt{S.res}, contenant la valeur de $S$ et l'erreur sur la grille afin de pouvoir les tracer sur Matlab.
 \subsection{Script de test (Matlab)}
+Le script Matlab \texttt{test\_hct.m} est utilisé comme pré et post-processeur. Dans une première phase, il construit la triangulation de Delaunay à partir du fichier \texttt{hct.pts} et la stocke dans \texttt{hct.tri}. Ensuite, il écrit dans \texttt{grille.don} les limites et les nombres de points dans les deux dimensions d'une grille rectangulaire. 
+
+Dans une deuxième phase, après avoir exécuté le fichier \texttt{a.out}, il trace $S$ et l'erreur, stockés dans \texttt{S.res}, pour les points de test de la grille construite précédemment.
 \section{Résultats}
+On a testé la méthode pour les fonctions
+f$\left(x, y\right) = e^{x + y}$ et $g\left(x, y\right) = y^3 - 2xy^2 - 5x^2 + 10xy + 1$ pour une grille de points de test avec des pas de 0.1 en $x$ et en $y$. On a obtenu les graphiques des figures \ref{fig:Sexp} et \ref{fig:Spoly} pour $f$ et $g$, respectivement. 
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{SExp.png}
+	\caption{$S$ pour la fonction de test $f$}
+	\label{fig:Sexp}
+\end{figure}
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{SPoly.png}
+	\caption{$S$ pour la fonction de test $g$}
+	\label{fig:Spoly}
+\end{figure}
+On représente l'erreur commise pour chacune des fonctions de test dans les figures \ref{fig:errExp} et \ref{fig:errPoly}.
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{errExp.png}
+	\caption{Erreur pour la fonction de test $f$}
+	\label{fig:errExp}
+\end{figure}
+\begin{figure}[H]
+	\includegraphics[width=\linewidth]{errPoly.png}
+	\caption{Erreur pour la fonction de test $g$}
+	\label{fig:errPoly}
+\end{figure}
 \end{document}
