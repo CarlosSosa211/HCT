@@ -248,45 +248,43 @@ contains
        write(6, *) "n est pas dans la triangulation"
     end if
     !
-    if (ntest > 1) then
-       do k = 2, ntest
-          M(1) = testPts(k, 1)
-          M(2) = testPts(k, 2)
-          !
-          l = mod(l + ntri - 2, ntri) + 1
-          niter = 0
-          dansT = .false.
-          do while (.not. dansT .and. niter /= ntri)
-             l = mod(l, ntri) + 1
-             call calcCoordT(coord, n, tri(:, l), coordT)
-             call calcBaryc(coordT, M, lambda, dansT)
-             niter = niter + 1
-          end do
-          !
-          if(dansT) then
-             if(niter /= 1) then
-                call calcFoncT(fonc, n, tri(:, l), foncT)
-                call calcGradT(derivx, derivy, n, tri(:, l), gradT)
-                call calcpq(coordT, gradT, p, q)
-                call calcOmega(coordT, coordOmega)
-                call calcu(coordT, coordOmega, u)
-                call calcCoeff(foncT, p, q, u, a, b, c, d, e, g, omega)
-             end if
-             dansTi = .false.
-             i = mod(i + 1, 3) + 1
-             do while (.not. dansTi)
-                i = mod(i, 3) + 1
-                call calcCoordTi(coordT, coordOmega, i, coordTi)
-                call calcBaryc(coordTi, M, lambda, dansTi)
-             end do
-             S(k) = calcS(a, b, c, d, e, g, omega, lambda, i)
-             !
-          else 
-             write(6, '("Le point (",f15.7, ",", f15.7, ")")') &
-                  M(1), M(2)
-             write(6, *) "n est pas dans la triangulation"
-          end if
+    do k = 2, ntest
+       M(1) = testPts(k, 1)
+       M(2) = testPts(k, 2)
+       !
+       l = mod(l + ntri - 2, ntri) + 1
+       niter = 0
+       dansT = .false.
+       do while (.not. dansT .and. niter /= ntri)
+          l = mod(l, ntri) + 1
+          call calcCoordT(coord, n, tri(:, l), coordT)
+          call calcBaryc(coordT, M, lambda, dansT)
+          niter = niter + 1
        end do
-    end if
+       !
+       if(dansT) then
+          if(niter /= 1) then
+             call calcFoncT(fonc, n, tri(:, l), foncT)
+             call calcGradT(derivx, derivy, n, tri(:, l), gradT)
+             call calcpq(coordT, gradT, p, q)
+             call calcOmega(coordT, coordOmega)
+             call calcu(coordT, coordOmega, u)
+             call calcCoeff(foncT, p, q, u, a, b, c, d, e, g, omega)
+          end if
+          dansTi = .false.
+          i = mod(i + 1, 3) + 1
+          do while (.not. dansTi)
+             i = mod(i, 3) + 1
+             call calcCoordTi(coordT, coordOmega, i, coordTi)
+             call calcBaryc(coordTi, M, lambda, dansTi)
+          end do
+          S(k) = calcS(a, b, c, d, e, g, omega, lambda, i)
+          !
+       else 
+          write(6, '("Le point (",f15.7, ",", f15.7, ")")') &
+               M(1), M(2)
+          write(6, *) "n est pas dans la triangulation"
+       end if
+    end do
   end subroutine interp
 end module hct

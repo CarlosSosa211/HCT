@@ -60,7 +60,7 @@ contains
   subroutine lecFiPoints(fiPts)
     implicit none
     character(len = *), intent(in) :: fiPts
-    integer :: i, j, nunit
+    integer :: i, nunit
     !
     nunit = 7
     open(unit = nunit, file = fiPts)
@@ -76,14 +76,14 @@ contains
   subroutine lecFiTri(fiTri)
     implicit none
     character(len = *), intent(in) :: fiTri
-    integer :: i, j, nunit
+    integer :: i, nunit
     !
     nunit = 7
     open(unit = nunit, file = fiTri)
     read(nunit, *) ntri
     allocate(tri(3, ntri))
-    do j = 1, ntri
-       read(nunit, *) tri(1, j), tri(1, j), tri(2, j), tri(3, j)
+    do i = 1, ntri
+       read(nunit, *) tri(1, i), tri(1, i), tri(2, i), tri(3, i)
     end do
   end subroutine lecFiTri
 end module donnees

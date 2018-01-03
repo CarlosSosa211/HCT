@@ -7,8 +7,8 @@ contains
     implicit none
     double precision :: x, y
     !
-    !f = exp(x + y)
-    f = y*y*y - 2*x*y*y - 5*x*x*y + 10*x*y + 1
+    f = exp(x + y)
+    !f = y*y*y - 2*x*y*y - 5*x*x*y + 10*x*y + 1
   end function f
   !
   !
@@ -16,8 +16,8 @@ contains
     implicit none
     double precision :: x, y
     !
-    !dxf = exp(x + y)
-    dxf = -2*y*y -10*x*y + 10*y
+    dxf = exp(x + y)
+    !dxf = -2*y*y -10*x*y + 10*y
   end function dxf
   !
   !
@@ -25,7 +25,7 @@ contains
     implicit none
     double precision :: x, y
     !
-    !dyf = exp(x + y)
-    dyf = 3*y*y - 4*x*y - 5*x*x + 10*x
+    dyf = exp(x + y)
+    !dyf = 3*y*y - 4*x*y - 5*x*x + 10*x
   end function dyf
 end module testFunctions
